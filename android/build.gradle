@@ -22,7 +22,12 @@ rootProject.allprojects {
 }
 
 apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
+// AGP 9+ ships built-in Kotlin; apply KGP only when the app opts out.
+def agpMajor = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION.tokenize('.')[0].toInteger()
+def builtInKotlin = agpMajor >= 9 && project.findProperty('android.builtInKotlin')?.toString() != 'false'
+if (!builtInKotlin) {
+    apply plugin: 'kotlin-android'
+}
 
 
 def DEFAULT_PLAY_SERVICES_LOCATION_VERSION = "21.3.0"
@@ -115,8 +120,10 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
-    kotlinOptions {
-        jvmTarget = '1.8'
+    if (!builtInKotlin) {
+        kotlinOptions {
+            jvmTarget = '1.8'
+        }
     }
 
     sourceSets {
@@ -158,4 +165,12 @@ dependencies {
 
     implementation 'com.google.guava:guava:33.4.0-android'
 
+}
+
+if (builtInKotlin) {
+    kotlin {
+        compilerOptions {
+            jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8
+        }
+    }
 }
